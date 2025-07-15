@@ -17,20 +17,20 @@ if ($mensagem && $telefone) {
         "message" => $resposta
     ];
 
-    // ✅ ENDPOINT CORRETO!
     $url = "https://api.z-api.io/instances/3E401062FA83E0F253FEBE7C53096139/token/021056C63BB7C732FB534BCD/send-message";
 
     $options = [
         'http' => [
-            'header'  => "Content-type: application/json\r\n",
+            'header'  => "Content-type: application/json\r\n" .
+                         "Client-Token: 021056C63BB7C732FB534BCD\r\n",
             'method'  => 'POST',
             'content' => json_encode($payload)
         ]
     ];
-    $context  = stream_context_create($options);
+    $context = stream_context_create($options);
     $result = file_get_contents($url, false, $context);
 
-    // Grava a resposta da API no log
+    // Log da resposta
     file_put_contents("log.txt", "Resposta da API: " . $result . PHP_EOL, FILE_APPEND);
 }
 ?>
