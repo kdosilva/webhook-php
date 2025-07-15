@@ -1,39 +1,40 @@
 <?php
+// Lê o conteúdo recebido
 $input = file_get_contents("php://input");
-file_put_contents("log.txt", $input . PHP_EOL, FILE_APPEND); // salva o log
 
+// Para debug: envia a entrada para o console do Railway
+error_log("Recebido: " . $input);
+
+// Decodifica o JSON recebido
 $data = json_decode($input, true);
 
-// Verifica se veio uma mensagem da Z-API
-if (isset($data['event']) && $data['event'] === 'message') {
-    $mensagem = $data['message']['text'] ?? '';
-    $numero = $data['message']['from'] ?? '';
+// Extrai mensagem e número
+$mensagem = $data['message']['text'] ?? '';
+$numero = $data['message']['from'] ?? '';
 
-    if ($mensagem && $numero) {
-        // Dados da sua instância da Z-API
-        $instance = '3E401062FA83E0F253FEBE7C53096139';
-        $token = '021056C63BB7C732FB534BCD';
+// Se houver mensagem e número, envia resposta
+if ($mensagem && $numero) {
+    // Monta resposta
+    $resposta = "Recebemos sua mensagem: \"$mensagem\" — em breve responderemos!";
 
-        // Prepara a mensagem de resposta
-        $resposta = [
-            'phone' => $numero,
-            'message' => "Você disse: $mensagem"
-        ];
+    // URL da sua instância Z-API (com ID e token)
+    $url = 'https://api.z-api.io/instances/3E401062FA83E0F253FEBE7C53096139/token/021056C63BB7C732FB534BCD/send-text';
 
-        $url = "https://api.z-api.io/instances/$instance/token/$token/send-messages";
+    // Monta os dados do POST
+    $postData = [
+        'phone' => $numero,
+        'message' => $resposta
+    ];
 
-        $ch = curl_init($url);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($resposta));
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            'Content-Type: application/json'
-        ]);
+    // Envia via cURL
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($postData));
+    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+    $result = curl_exec($ch);
+    curl_close($ch);
 
-        $res = curl_exec($ch);
-        curl_close($ch);
-
-        file_put_contents("log.txt", "RESPOSTA: $res" . PHP_EOL, FILE_APPEND); // salva resposta da API
-    }
+    // Log da resposta da API Z-API
+    error_log("Resposta da API: " . $result);
 }
 ?>
