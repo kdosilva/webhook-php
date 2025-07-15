@@ -1,30 +1,31 @@
 <?php
 $input = file_get_contents("php://input");
-file_put_contents("log.txt", $input . PHP_EOL, FILE_APPEND); // para debug
+file_put_contents("log.txt", $input . PHP_EOL, FILE_APPEND);
 
 $data = json_decode($input, true);
 $mensagem = $data['text']['message'] ?? '';
-$numero = $data['phone'] ?? '';
+$telefone = $data['phone'] ?? '';
 
-if ($mensagem && $numero) {
-    $url = "https://api.z-api.io/instances/3E401062FA83E0F253FEBE7C53096139/send-text";
+if ($mensagem && $telefone) {
+    $resposta = "Recebido: " . $mensagem;
 
-    $body = [
-        "phone" => $numero,
-        "message" => "Recebido com sucesso: \"$mensagem\""
+    $payload = [
+        'phone' => $telefone,
+        'message' => $resposta
     ];
 
-    $ch = curl_init($url);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_POST, true);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, [
-        'Content-Type: application/json',
-        'Client-Token: 021056C63BB7C732FB534BCD'  // cabeçalho com token
-    ]);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($body));
-    $response = curl_exec($ch);
-    curl_close($ch);
+    $url = "https://api.z-api.io/instances/3E401062FA83E0F253FEBE7C53096139/token/021056C63BB7C732FB534BCD/send-message";
 
-    file_put_contents("log.txt", "Resposta API: " . $response . PHP_EOL, FILE_APPEND);
+    $options = [
+        'http' => [
+            'header'  => "Content-type: application/json\r\n",
+            'method'  => 'POST',
+            'content' => json_encode($payload)
+        ]
+    ];
+    $context  = stream_context_create($options);
+    $result = file_get_contents($url, false, $context);
+
+    file_put_contents("log.txt", "Resposta da API: " . $result . PHP_EOL, FILE_APPEND);
 }
 ?>
