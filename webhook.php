@@ -19,7 +19,8 @@ if ($mensagem && $telefone) {
 
     $instanceId = "3E401062FA83E0F253FEBE7C53096139";
 $token = "021056C63BB7C732FB534BCD";
-$url = "https://v2.z-api.io/instances/$instanceId/token/$token/send-text";
+https://v2.z-api.io/instances/{3E401062FA83E0F253FEBE7C53096139}/token/{021056C63BB7C732FB534BCD}/send-text
+
 
 
     $options = [
