@@ -1,2 +1,2 @@
 <?php
-echo "Webhook online!";
+echo "Webhook PHP está rodando com sucesso!";
