@@ -17,16 +17,17 @@ if ($mensagem && $telefone) {
         "message" => $resposta
     ];
 
+    // ✅ ID da instância e token reais
     $instanceId = "3E401062FA83E0F253FEBE7C53096139";
-$token = "021056C63BB7C732FB534BCD";
-https://v2.z-api.io/instances/{3E401062FA83E0F253FEBE7C53096139}/token/{021056C63BB7C732FB534BCD}/send-text
+    $token = "021056C63BB7C732FB534BCD";
 
+    // ✅ URL correta da Z-API
+    $url = "https://v2.z-api.io/instances/$instanceId/token/$token/send-text";
 
-
+    // ✅ Envio com HTTP context
     $options = [
         'http' => [
-            'header'  => "Content-type: application/json\r\n"
-                       . "Client-Token: 021056C63BB7C732FB534BCD\r\n",
+            'header'  => "Content-type: application/json\r\n",
             'method'  => 'POST',
             'content' => json_encode($payload)
         ]
@@ -36,9 +37,9 @@ https://v2.z-api.io/instances/{3E401062FA83E0F253FEBE7C53096139}/token/{021056C6
 
     if ($result === FALSE) {
         file_put_contents("log.txt", "Erro ao enviar requisição para API Z-API" . PHP_EOL, FILE_APPEND);
+    } else {
+        file_put_contents("log.txt", "Resposta da API: " . $result . PHP_EOL, FILE_APPEND);
     }
-
-    // Grava a resposta da API no log
-    file_put_contents("log.txt", "Resposta da API: " . $result . PHP_EOL, FILE_APPEND);
 }
 ?>
+
