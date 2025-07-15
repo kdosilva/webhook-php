@@ -1,18 +1,23 @@
 <?php
+// Exibe erros (útil para debug, desabilite em produção)
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
+
+// Conexão
 require_once 'conexao.php';
 
-// Recebe JSON da Z-API
+// Recebe o JSON do webhook
 $input = json_decode(file_get_contents('php://input'), true);
 file_put_contents("webhook_log.txt", json_encode($input, JSON_PRETTY_PRINT) . PHP_EOL, FILE_APPEND);
 
+// Sanitiza
 $telefone = $input['phone'] ?? '';
 $mensagem = strtolower(trim($input['text']['message'] ?? ''));
 $resposta = "Olá! Envie sua despesa ou receita. Ex: 'Gastei R$20 em lanche e R$15 em ônibus'.";
 $data = date('Y-m-d H:i:s');
 
 if ($telefone && $mensagem) {
+    // Busca cliente
     $stmt = $conexao->prepare("SELECT id, nome FROM clientes WHERE telefone = ?");
     $stmt->bind_param("s", $telefone);
     $stmt->execute();
@@ -22,7 +27,7 @@ if ($telefone && $mensagem) {
         $cliente = $resultado->fetch_assoc();
         $cliente_id = $cliente['id'];
 
-        // Prompt para a IA entender e categorizar
+        // Prompt para IA
         $prompt = "A mensagem abaixo pode conter transações financeiras ou informações de renda fixa.
 Extraia os dados como um array JSON com os seguintes formatos:
 
@@ -37,7 +42,9 @@ Se for uma renda fixa:
 
 Mensagem: \"$mensagem\"";
 
-        $openai_key = "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";
+        // Chave OpenAI via variável de ambiente
+        $openai_key = getenv("OPENAI_API_KEY");
+
         $payload = [
             "model" => "gpt-3.5-turbo",
             "messages" => [
@@ -46,6 +53,7 @@ Mensagem: \"$mensagem\"";
             ]
         ];
 
+        // Chamada à OpenAI
         $ch = curl_init("https://api.openai.com/v1/chat/completions");
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
             "Authorization: Bearer $openai_key",
@@ -58,7 +66,7 @@ Mensagem: \"$mensagem\"";
         curl_close($ch);
 
         $json = json_decode($resposta_api, true);
-        $conteudo = json_decode($json['choices'][0]['message']['content'], true);
+        $conteudo = json_decode($json['choices'][0]['message']['content'] ?? '', true);
 
         if (is_array($conteudo)) {
             foreach ($conteudo as $t) {
@@ -91,32 +99,32 @@ Mensagem: \"$mensagem\"";
         $resposta = "Olá! Seu número não está cadastrado. Acesse Konektoos para se registrar.";
     }
 
-    // Envia resposta via Z-API
-    $instance = '3E401062FA83E0F253FEBE7C53096139';
-$clientToken = '021056C63BB7C732FB534BCD'; // seu token real da Z-API v2
-$url = "https://v2.z-api.io/instances/$instance/send-text";
+    // Envia resposta pela Z-API
+    $instance = getenv("3E401062FA83E0F253FEBE7C53096139");
+    $clientToken = getenv("021056C63BB7C732FB534BCD");
 
-$send_payload = json_encode([
-    "chatId" => $telefone . "@s.whatsapp.net",
-    "message" => $resposta
-]);
+    $url = "https://v2.z-api.io/instances/$instance/send-text";
+    $send_payload = json_encode([
+        "chatId" => $telefone . "@s.whatsapp.net",
+        "message" => $resposta
+    ]);
 
-$ch = curl_init($url);
-curl_setopt($ch, CURLOPT_HTTPHEADER, [
-    'Content-Type: application/json',
-    "Client-Token: $clientToken"
-]);
-curl_setopt($ch, CURLOPT_POST, true);
-curl_setopt($ch, CURLOPT_POSTFIELDS, $send_payload);
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-$envio = curl_exec($ch);
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        'Content-Type: application/json',
+        "Client-Token: $clientToken"
+    ]);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $send_payload);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    $envio = curl_exec($ch);
 
-if ($envio === false) {
-    $envio = 'Erro cURL: ' . curl_error($ch); // salva o erro cURL no log
-}
-curl_close($ch);
+    if ($envio === false) {
+        $envio = 'Erro cURL: ' . curl_error($ch);
+    }
 
-file_put_contents("resposta_envio.txt", $envio ?: 'Erro ao enviar');
-
+    curl_close($ch);
+    file_put_contents("resposta_envio.txt", $envio ?: 'Erro ao enviar');
 }
 ?>
+
