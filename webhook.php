@@ -17,7 +17,8 @@ if ($mensagem && $telefone) {
         "message" => $resposta
     ];
 
-    $url = "https://api.z-api.io/instances/3E401062FA83E0F253FEBE7C53096139/token/021056C63BB7C732FB534BCD/send-message";
+    // ✅ ENDPOINT CORRETO
+    $url = "https://api.z-api.io/instances/3E401062FA83E0F253FEBE7C53096139/token/021056C63BB7C732FB534BCD/send-text";
 
     $options = [
         'http' => [
@@ -30,7 +31,7 @@ if ($mensagem && $telefone) {
     $context = stream_context_create($options);
     $result = file_get_contents($url, false, $context);
 
-    // Log da resposta
+    // Grava a resposta da API no log
     file_put_contents("log.txt", "Resposta da API: " . $result . PHP_EOL, FILE_APPEND);
 }
 ?>
