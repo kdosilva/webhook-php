@@ -1,7 +1,4 @@
 {
-  "build": {
-    "env": {
-      "PORT": "80"
-    }
-  }
+  "build": "docker build -t webhook-php .",
+  "start": "docker run -p 8080:8080 webhook-php"
 }
