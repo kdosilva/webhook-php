@@ -1,40 +1,35 @@
 <?php
-// Lê o conteúdo recebido
 $input = file_get_contents("php://input");
 
-// Para debug: envia a entrada para o console do Railway
-error_log("Recebido: " . $input);
+// Salva o conteúdo bruto para depuração (opcional)
+file_put_contents("log.txt", $input . PHP_EOL, FILE_APPEND);
 
-// Decodifica o JSON recebido
+// Converte JSON em array associativo
 $data = json_decode($input, true);
 
-// Extrai mensagem e número
-$mensagem = $data['message']['text'] ?? '';
-$numero = $data['message']['from'] ?? '';
+// Extrai a mensagem do campo correto
+$mensagem = $data['text']['message'] ?? '';
+$numero = $data['connectedPhone'] ?? '';
 
-// Se houver mensagem e número, envia resposta
 if ($mensagem && $numero) {
-    // Monta resposta
-    $resposta = "Recebemos sua mensagem: \"$mensagem\" — em breve responderemos!";
+    // Monta os dados para enviar a resposta via Z-API
+    $url = "https://api.z-api.io/instances/3E401062FA83E0F253FEBE7C53096139/token/021056C63BB7C732FB534BCD/send-text";
 
-    // URL da sua instância Z-API (com ID e token)
-    $url = 'https://api.z-api.io/instances/3E401062FA83E0F253FEBE7C53096139/token/021056C63BB7C732FB534BCD/send-text';
-
-    // Monta os dados do POST
-    $postData = [
-        'phone' => $numero,
-        'message' => $resposta
+    $body = [
+        "phone" => $numero,
+        "message" => "Recebido com sucesso: \"$mensagem\""
     ];
 
-    // Envia via cURL
+    // Envia POST com cURL
     $ch = curl_init($url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($postData));
+    curl_setopt($ch, CURLOPT_POST, true);
     curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
-    $result = curl_exec($ch);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($body));
+    $response = curl_exec($ch);
     curl_close($ch);
 
-    // Log da resposta da API Z-API
-    error_log("Resposta da API: " . $result);
+    // Salva resposta da API (opcional)
+    file_put_contents("log.txt", "Resposta da API: " . $response . PHP_EOL, FILE_APPEND);
 }
 ?>
