@@ -1,4 +1,6 @@
 {
-  "build": "docker build -t webhook-php .",
-  "start": "docker run -p 8080:8080 webhook-php"
+  "build": {
+    "dockerfilePath": "dockerfile"
+  },
+  "start": "php -S 0.0.0.0:8080"
 }
