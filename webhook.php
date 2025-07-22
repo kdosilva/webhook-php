@@ -1,5 +1,7 @@
 <?php
 // webhook.php - recebe mensagens da Z-API e responde com ChatGPT
+file_put_contents('log.txt', json_encode($data) . PHP_EOL, FILE_APPEND);
+
 
 $openai_api_key = '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';
 $zapi_instance = 'https://api.z-api.io/instances/3E401062FA83E0F253FEBE7C53096139/token/021056C63BB7C732FB534BCD/send-text';
